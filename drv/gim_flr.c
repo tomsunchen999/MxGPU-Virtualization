@@ -21,7 +21,6 @@
  */
 
 #include <linux/pci.h>
-#include <linux/pci-aspm.h>
 #include <linux/delay.h>
 
 #include "gim_debug.h"
@@ -320,8 +319,7 @@ int gim_vf_flr(struct adapter *adapt, struct function *vf)
 
 	/* save FLR state */
 	gim_save_flr_state(adapt, vf);
-
-	do_gettimeofday(&vf->time_log.reset_time);
+	vf->time_log.reset_time = ktime_get(); 
 	vf->time_log.reset_count++;
 
 	/* do the FLR */

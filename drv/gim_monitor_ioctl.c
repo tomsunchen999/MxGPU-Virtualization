@@ -54,18 +54,18 @@ char *amdgim_commands[AMDGIM_COMMAND_LEN] = {
 
 void amdgim_mutex_get_lock(struct amdgim_mutex_lock *mutexlock)
 {
-	struct timeval curr_t;
+	time64_t curr_t;
 
 	do {
 		spin_lock(&mutexlock->atom_lock);
-		do_gettimeofday(&curr_t);
+		curr_t = ktime_get();
 		/* if last_time.tv_sec ==0, it would never be timed out */
 		if (mutexlock->locked == true &&
-			mutexlock->timeout_start.tv_sec > 0 &&
-			(curr_t.tv_sec - mutexlock->timeout_start.tv_sec)
+			mutexlock->timeout_start > 0 &&
+			(curr_t  - mutexlock->timeout_start)
 			> AMDGIM_LOCK_TIMEOUT_S){
 			/* timeout force release the lock */
-			mutexlock->timeout_start.tv_sec = 0;
+			mutexlock->timeout_start = 0;
 			mutexlock->locked = false;
 			mutex_unlock(&mutexlock->lock_mutex);
 		}
@@ -73,7 +73,7 @@ void amdgim_mutex_get_lock(struct amdgim_mutex_lock *mutexlock)
 		if (mutexlock->locked == false) {
 			if (mutex_trylock(&mutexlock->lock_mutex)) {
 				mutexlock->locked = true;
-				mutexlock->timeout_start.tv_sec = 0;
+				mutexlock->timeout_start = 0;
 				spin_unlock(&mutexlock->atom_lock);
 				break;
 			}
@@ -91,7 +91,7 @@ void amdgim_mutex_get_lock(struct amdgim_mutex_lock *mutexlock)
 void amdgim_mutex_start_timeout(struct amdgim_mutex_lock *mutexlock)
 {
 	spin_lock(&mutexlock->atom_lock);
-	do_gettimeofday(&mutexlock->timeout_start);
+	mutexlock->timeout_start = ktime_get();
 	spin_unlock(&mutexlock->atom_lock);
 }
 
@@ -99,8 +99,8 @@ void amdgim_mutex_release_lock(struct amdgim_mutex_lock *mutexlock)
 {
 	spin_lock(&mutexlock->atom_lock);
 	if (mutexlock->locked == true) {
-		if (mutexlock->timeout_start.tv_sec > 0) {
-			mutexlock->timeout_start.tv_sec = 0;
+		if (mutexlock->timeout_start > 0) {
+			mutexlock->timeout_start = 0;
 			gim_info("timeout lock released");
 		}
 		mutexlock->locked = false;

@@ -100,15 +100,15 @@ union physical_address {
 
 #define MAX_MSG_LEN  64
 struct op_time_log {
-	struct timeval init_start;
-	struct timeval init_end;
-	struct timeval finish_start;
-	struct timeval finish_end;
+	time64_t  init_start;
+	time64_t  init_end;
+	time64_t finish_start;
+	time64_t finish_end;
 	int reset_count;
-	struct timeval reset_time;
+	time64_t reset_time;
 	/* we need accurate time here*/
-	struct timespec active_last_tick;
-	struct timespec active_time;
+	struct timespec64 active_last_tick;
+	struct timespec64 active_time;
 };
 
 enum amdgim_option_mode {
@@ -413,7 +413,7 @@ struct adapter {
 	struct work_task irq_tasks[MAX_VIRTUAL_FUNCTIONS];
 	int vf_req_gpu_access;
 	/* the time when a VF enters full access mode*/
-	struct timespec start_time;
+	struct timespec64 start_time;
 	/* timeout check timer*/
 	struct hrtimer timeout_timer;
 	/* record the last VF id that owns gpu*/
@@ -534,7 +534,7 @@ int gim_sched_reset_vf(struct adapter *adapt,
 			int command_status);
 
 int gim_sched_reset_gpu(struct adapter *adapt);
-struct timespec time_elapsed(struct timespec *ts_start);
+struct timespec64 time_elapsed(struct timespec64 *ts_start);
 void pause_scheduler(struct adapter *adapt);
 void resume_scheduler(struct adapter *adapt);
 int get_scheduler_time_interval(struct adapter *adapt, struct function *func);

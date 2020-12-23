@@ -1256,8 +1256,7 @@ int handle_req_gpu_init_access(struct adapter *adapt, int func_id, int is_reset)
 		}
 
 		/* record the init start time for monitoring */
-		do_gettimeofday(&function->time_log.init_start);
-
+                function->time_log.init_start = ktime_get();
 		/* update current running vf */
 		adapt->curr_running_func = new_node;
 
@@ -1324,8 +1323,7 @@ int handle_rel_gpu_init_access(struct adapter *adapt, int func_id)
 #endif
 
 	/* record init rel time for monitoring */
-	do_gettimeofday(&function->time_log.init_end);
-
+        function->time_log.init_end = ktime_get();
 	if (function->in_flr) {
 		gim_info("restore FLR VF %d to available\n", function->func_id);
 		function->in_flr = 0;
@@ -1421,7 +1419,7 @@ int handle_req_gpu_fini_access(struct adapter *adapt, int func_id)
 #endif
 
 		/* record fini req time for monitoring */
-		do_gettimeofday(&func->time_log.finish_start);
+		func->time_log.finish_start = ktime_get();
 	}
 
 	/* start timer for full access timeout check*/
@@ -1473,8 +1471,7 @@ int handle_rel_gpu_fini_access(struct adapter *adapt, int func_id)
 #endif
 
 	/* record  fini req time for monitoring */
-	do_gettimeofday(&func->time_log.finish_end);
-
+        func->time_log.finish_end = ktime_get();
 	mutex_lock(&adapt->curr_running_func_mutex);
 	loop_once_for_all_active_VFs(adapt);
 	mutex_unlock(&adapt->curr_running_func_mutex);
@@ -1488,7 +1485,7 @@ int handle_fullaccess_timeout(struct adapter *adapt)
 	struct function *func = NULL;
 	struct function *next_func = NULL;
 	struct function_list_node *node;
-	struct timespec time_diff;
+	struct timespec64 time_diff;
 	unsigned long time_us;
 	int func_id = 0;
 
@@ -1664,7 +1661,7 @@ void signal_scheduler(void *pcontext)
 				/* set the timestamp for full access
 				 * timeout check
 				 */
-				getnstimeofday(&adapt->start_time);
+				ktime_get_ts64(&adapt->start_time);
 				/* send SIG_VF_EXCLUSIVE_MMIO to QEMU */
 				handle_req_gpu_init_access(adapt,
 				req_gpu_task->func_id, NO_RESET);
@@ -1685,7 +1682,7 @@ void signal_scheduler(void *pcontext)
 				/* set the timestamp for full access timeout
 				 * check
 				 */
-				getnstimeofday(&adapt->start_time);
+				ktime_get_ts64(&adapt->start_time);
 				handle_req_gpu_init_access(adapt,
 				req_gpu_task->func_id, RESET_REQUEST);
 
@@ -1717,7 +1714,7 @@ void signal_scheduler(void *pcontext)
 				/* set the timestamp for full access timeout
 				 * check
 				 */
-				getnstimeofday(&adapt->start_time);
+				ktime_get_ts64(&adapt->start_time);
 				/* send SIG_VF_EXCLUSIVE_MMIO to QEMU */
 				handle_req_gpu_fini_access(adapt,
 						req_gpu_task->func_id);
