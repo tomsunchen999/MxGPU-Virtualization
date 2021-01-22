@@ -127,7 +127,7 @@ struct adapter *bdf_to_adapter(uint32_t bdf)
 	for (i = 0 ; i < get_adapter_count() ; ++i) {
 		int     j;
 
-		adapt = get_adapters() + i;
+		adapt = adapt + i;
 
 		if (adapt->pf.bdf == bdf)
 			return adapt;

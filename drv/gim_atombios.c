@@ -488,7 +488,6 @@ static void load_default_firmware(struct adapter *adapt)
  */
 static unsigned int firmware_requires_update(struct adapter *adapt)
 {
-	uint16_t	tbl_index;
 	struct atom_gpu_virt_info_v2_1 *patch_info;
 	struct atom_common_table_header       *patch_table_header;
 	unsigned int	rom_ver;
@@ -496,8 +495,6 @@ static unsigned int firmware_requires_update(struct adapter *adapt)
 	unsigned char  *ucode;
 	unsigned int bits = 0;
 
-	tbl_index =
-		get_index_into_master_table(data, gpu_virt);
 	patch_table_header =
 		(struct atom_common_table_header *)sriov_vbios_patch_buf;
 	patch_info = (struct atom_gpu_virt_info_v2_1 *)
